@@ -1,0 +1,46 @@
+spring:
+  application:
+    name: sus-connect-network-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/sus_connect_network
+    username: postgres
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
+  level:
+    com.fiap.sus.network: DEBUG
+    org.springframework.web: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, prometheus, metrics
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: 1.0
+
+jwt:
+  secret: "my-secret-key-must-be-very-long-and-secure-enough-for-hs256-algorithm"
+  expiration: 86400000
+
+app:
+  geocoding:
+    url: "https://nominatim.openstreetmap.org/search"
