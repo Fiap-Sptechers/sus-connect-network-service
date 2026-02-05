@@ -35,8 +35,8 @@ public class TokenService {
                     .withClaim("roles", buildRolesClaim(user))
                     .withExpiresAt(genExpirationDate())
                     .sign(algorithm);
-        } catch (JWTCreationException exzipCodetion) {
-            throw new RuntimeException("Error while generating token", exzipCodetion);
+        } catch (JWTCreationException exception) {
+            throw new RuntimeException("Error while generating token", exception);
         }
     }
 
@@ -48,7 +48,7 @@ public class TokenService {
                     .build()
                     .verify(token)
                     .getSubject();
-        } catch (JWTVerificationException exzipCodetion) {
+        } catch (JWTVerificationException exception) {
             return "";
         }
     }
@@ -63,7 +63,7 @@ public class TokenService {
         
         // Unit roles
         user.getUnitRoles().forEach(ur -> {
-            roles.add(Map.of("role", ur.getRole().getName(), "unitId", ur.getUnit().getId(), "level", ur.getRole().getLevel()));
+            roles.add(Map.of("role", ur.getRole().getName(), "unitId", ur.getUnit().getId().toString(), "level", ur.getRole().getLevel()));
         });
         
         return roles;

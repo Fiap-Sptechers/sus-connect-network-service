@@ -29,6 +29,11 @@ public class SpecialtyController {
         return ResponseEntity.status(201).body(service.createSpecialty(request));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<SpecialtyResponse> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.findById(id));
+    }
+
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {

@@ -14,8 +14,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -40,18 +38,8 @@ class AuthServiceTest {
     @InjectMocks
     private AuthService authService;
 
-    // We need to inject real encoder or mock it. AuthService uses new BCryptPasswordEncoder() directly in field declaration?
-    // Let's check AuthService source. It does `private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();`
-    // So we can't easily mock it unless we verify behavior or use Reflection to swap it, but usually standard encoder is fine.
-
-    @BeforeEach
-    void setUp() {
-        // No special setup needed
-    }
-
     @Test
     void login_ShouldReturnToken_WhenCredentialsAreValid() {
-        // Arrange
         String cpf = "12345678900";
         String password = "password";
         String encodedPassword = new BCryptPasswordEncoder().encode(password);
@@ -66,10 +54,8 @@ class AuthServiceTest {
 
         LoginRequest request = new LoginRequest(cpf, password);
 
-        // Act
         TokenResponse response = authService.login(request);
 
-        // Assert
         assertNotNull(response);
         assertEquals("valid_token", response.token());
     }
@@ -80,6 +66,27 @@ class AuthServiceTest {
         when(userRepository.findByCpfCnpj("invalid")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> authService.login(request));
+    }
+
+    @Test
+    void refresh_ShouldReturnNewToken() {
+        String cpf = "12345678900";
+        Authentication auth = mock(Authentication.class);
+        SecurityContext securityContext = mock(SecurityContext.class);
+        when(securityContext.getAuthentication()).thenReturn(auth);
+        when(auth.getName()).thenReturn(cpf);
+        SecurityContextHolder.setContext(securityContext);
+
+        User user = new User();
+        user.setCpfCnpj(cpf);
+
+        when(userRepository.findByCpfCnpj(cpf)).thenReturn(Optional.of(user));
+        when(tokenService.generateToken(user)).thenReturn("new_token");
+
+        TokenResponse response = authService.refresh();
+
+        assertNotNull(response);
+        assertEquals("new_token", response.token());
     }
 
     @Test

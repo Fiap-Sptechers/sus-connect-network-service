@@ -134,6 +134,10 @@ public class HealthUnitService {
              
              log.info("Final nearby search result: {} units within radius", filteredList.size());
                 
+             if (pageable.isUnpaged()) {
+                 return new PageImpl<>(filteredList, pageable, filteredList.size());
+             }
+                
              int start = (int) pageable.getOffset();
              int end = Math.min((start + pageable.getPageSize()), filteredList.size());
              if (start > filteredList.size()) return Page.empty(pageable);

@@ -44,6 +44,11 @@ public class DoctorService {
         return doctorMapper.toDto(doctorRepository.save(doctor));
     }
 
+    public DoctorResponse findById(UUID id) {
+        Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
+        return doctorMapper.toDto(doctor);
+    }
+
     @Transactional
     public void delete(UUID id) {
         Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));

@@ -109,6 +109,62 @@ class AccessControlServiceTest {
     }
 
     @Test
+    void listMembers_ShouldReturnMembers() {
+        UUID unitId = UUID.randomUUID();
+        UserUnit uu = new UserUnit();
+        uu.setUser(new User());
+        when(userUnitRepository.existsByUserIdAndUnitId(any(), any())).thenReturn(true);
+        when(userUnitRepository.findByUnitId(unitId)).thenReturn(List.of(uu));
+        
+        UserMapper mapper = mock(UserMapper.class);
+        when(mapper.toDto(any())).thenReturn(new UserResponse(UUID.randomUUID(), "Test", "admin", List.of()));
+
+        List<UserResponse> result = service.listMembers(unitId, mapper);
+
+        assertFalse(result.isEmpty());
+    }
+
+    @Test
+    void grantUnitAccess_ShouldThrow_WhenLowerLevel() {
+        User currentUser = new User();
+        currentUser.setId(userId);
+        User targetUser = new User();
+        HealthUnit unit = new HealthUnit();
+        unit.setId(UUID.randomUUID());
+        
+        Role targetRole = new Role();
+        targetRole.setLevel(100); // Target is higher level
+        
+        Role currentRole = new Role();
+        currentRole.setLevel(10); // Current is lower level
+        
+        UserUnit currentMember = new UserUnit();
+        currentMember.setRole(currentRole);
+
+        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(targetRole));
+        when(userUnitRepository.findByUserIdAndUnitId(any(), any())).thenReturn(Optional.of(currentMember));
+        
+        // Mock NOT Admin
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("USER")));
+
+        assertThrows(AccessDeniedException.class, () -> 
+            service.grantUnitAccess(currentUser, targetUser, unit, "ADMIN"));
+    }
+
+    @Test
+    void grantUnitAccessSystem_ShouldGrant() {
+        User targetUser = new User();
+        HealthUnit unit = new HealthUnit();
+        Role role = new Role();
+        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(role));
+
+        service.grantUnitAccessSystem(targetUser, unit, "ADMIN");
+
+        verify(userUnitRepository).save(any(UserUnit.class));
+    }
+
+    @Test
     void addMember_ShouldCallGrantAccess() {
         UUID unitId = UUID.randomUUID();
         MemberRequest request = new MemberRequest(UUID.randomUUID(), "OPERATOR");

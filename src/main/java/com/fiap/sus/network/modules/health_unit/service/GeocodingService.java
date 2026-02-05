@@ -24,9 +24,9 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class GeocodingService {
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
     private final AppConfigProperties appConfig;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     public GeocodedLocation geocode(String address) {
         log.info("Fetching coordinates and location info for address: {}", address);

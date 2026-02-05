@@ -31,6 +31,11 @@ public class SpecialtyService {
         return specialtyMapper.toDto(specialtyRepository.save(esp));
     }
 
+    public SpecialtyResponse findById(UUID id) {
+        Specialty spec = specialtyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Specialty not found"));
+        return specialtyMapper.toDto(spec);
+    }
+
     @Transactional
     public void delete(UUID id) {
         Specialty spec = specialtyRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Specialty not found"));

@@ -11,6 +11,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/doctors")
 @RequiredArgsConstructor
@@ -25,8 +27,13 @@ public class DoctorController {
 
     @PostMapping
     @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
-    public ResponseEntity<DoctorResponse> createDoctor(@RequestBody DoctorRequest request) {
+    public ResponseEntity<DoctorResponse> createDoctor(@RequestBody @Valid DoctorRequest request) {
         return ResponseEntity.status(201).body(service.createDoctor(request));
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<DoctorResponse> getById(@PathVariable UUID id) {
+        return ResponseEntity.ok(service.findById(id));
     }
 
     @DeleteMapping("/{id}")

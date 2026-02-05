@@ -69,7 +69,6 @@ class HealthUnitServiceTest {
         Authentication authentication = mock(Authentication.class);
         CustomUserDetails userDetails = mock(CustomUserDetails.class);
 
-        // Lenient stubs because not all tests use them
         lenient().when(securityContext.getAuthentication()).thenReturn(authentication);
         lenient().when(authentication.getPrincipal()).thenReturn(userDetails);
         lenient().when(userDetails.getId()).thenReturn(userId);
@@ -79,7 +78,6 @@ class HealthUnitServiceTest {
 
     @Test
     void create_ShouldSave_WhenCnpjDoesNotExist() {
-        // Arrange
         HealthUnitRequest request = new HealthUnitRequest("Unit 1", "00000000000191", new AddressRequest("Street", null, null, null, "City", "SP", "00000000"), null);
         when(repository.existsByCnpj(request.cnpj())).thenReturn(false);
         
@@ -87,7 +85,6 @@ class HealthUnitServiceTest {
         when(geocodingService.geocode(anyString())).thenReturn(location);
 
         HealthUnit entity = new HealthUnit();
-        // Assuming mapper sets address object
         Address addr = new Address();
         entity.setAddress(addr);
         entity.setId(UUID.randomUUID());
@@ -98,10 +95,8 @@ class HealthUnitServiceTest {
         
         when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
 
-        // Act
         HealthUnitResponse response = service.create(request);
 
-        // Assert
         assertNotNull(response);
         verify(repository).save(entity);
         verify(accessControlService).grantUnitAccessSystem(any(), any(), eq("MANAGER"));
@@ -160,34 +155,52 @@ class HealthUnitServiceTest {
 
     @Test
     void findAll_ShouldFilterByRadius() {
-        // Arrange
-        String baseAddr = "Avenida Paulista";
+        String baseAddr = "Paulista";
         HealthUnitFilter filter = new HealthUnitFilter("Unit", "123", "SP", baseAddr, 10.0, DistanceUnit.KM);
-        Pageable pageable = Pageable.unpaged();
 
         when(accessControlService.isAdmin()).thenReturn(true);
-        
-        GeocodingService.GeocodedLocation loc = new GeocodingService.GeocodedLocation(-23.5, -46.6, "SP", "SP");
-        when(geocodingService.geocode(baseAddr)).thenReturn(loc);
+        when(geocodingService.geocode(baseAddr)).thenReturn(new GeocodingService.GeocodedLocation(-23.5, -46.6, "SP", "SP"));
 
         HealthUnit unit = new HealthUnit();
-        unit.setId(UUID.randomUUID());
         unit.setAddress(new Address());
-        unit.getAddress().setLatitude(-23.51); // nearby
+        unit.getAddress().setLatitude(-23.51);
         unit.getAddress().setLongitude(-46.61);
         
-        List<HealthUnit> units = new ArrayList<>();
-        units.add(unit);
-        
-        when(repository.findAll(any(Specification.class))).thenReturn(units);
+        when(repository.findAll(any(Specification.class))).thenReturn(List.of(unit));
         when(geocodingService.filterByRadius(anyList(), anyDouble(), anyDouble(), anyDouble(), any())).thenReturn(Map.of(unit, 1.5));
-        when(unitMapper.toDto(any())).thenReturn(new HealthUnitResponse(unit.getId(), "Unit", "123", null, null));
+        when(unitMapper.toDto(any())).thenReturn(new HealthUnitResponse(UUID.randomUUID(), "Unit", "123", null, null));
 
-        // Act
-        Page<HealthUnitResponse> result = service.findAll(filter, pageable);
+        Page<HealthUnitResponse> result = service.findAll(filter, Pageable.unpaged());
 
-        // Assert
         assertNotNull(result);
         assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void findAll_ShouldThrow_WhenRadiusTooLarge() {
+        HealthUnitFilter filter = new HealthUnitFilter(null, null, null, "Paulista", 200.0, DistanceUnit.KM);
+        assertThrows(BusinessException.class, () -> service.findAll(filter, Pageable.unpaged()));
+    }
+
+    @Test
+    void findAll_ShouldReturnEmpty_WhenGeocodingFails() {
+        HealthUnitFilter filter = new HealthUnitFilter(null, null, null, "Unknown", 10.0, DistanceUnit.KM);
+        when(accessControlService.isAdmin()).thenReturn(true);
+        when(geocodingService.geocode(anyString())).thenReturn(new GeocodingService.GeocodedLocation(0.0, 0.0, null, null));
+
+        Page<HealthUnitResponse> result = service.findAll(filter, Pageable.unpaged());
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void findAll_ShouldUseRegularFilter_WhenNoRadius() {
+        HealthUnitFilter filter = new HealthUnitFilter("Unit 1", null, null, null, null, null);
+        when(accessControlService.isAdmin()).thenReturn(true);
+        when(repository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(Page.empty());
+
+        service.findAll(filter, Pageable.unpaged());
+
+        verify(repository).findAll(any(Specification.class), any(Pageable.class));
     }
 }

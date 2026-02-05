@@ -6,7 +6,6 @@ import com.fiap.sus.network.modules.doctor.dto.DoctorResponse;
 import com.fiap.sus.network.modules.doctor.entity.Doctor;
 import com.fiap.sus.network.modules.doctor.mapper.DoctorMapper;
 import com.fiap.sus.network.modules.doctor.repository.DoctorRepository;
-import com.fiap.sus.network.modules.specialty.entity.Specialty;
 import com.fiap.sus.network.modules.specialty.repository.SpecialtyRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,11 +13,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.UUID;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,7 +26,7 @@ import static org.mockito.Mockito.*;
 class DoctorServiceTest {
 
     @Mock
-    private DoctorRepository repository;
+    private DoctorRepository doctorRepository;
     @Mock
     private SpecialtyRepository specialtyRepository;
     @Mock
@@ -38,47 +36,72 @@ class DoctorServiceTest {
     private DoctorService service;
 
     @Test
-    void createDoctor_ShouldSave_WhenSpecialtiesExist() {
-        UUID specId = UUID.randomUUID();
-        DoctorRequest request = new DoctorRequest("Dr. Test", "123456-SP", new HashSet<>(Collections.singletonList(specId)));
-        
-        when(specialtyRepository.findAllById(request.specialtyIds())).thenReturn(List.of(new Specialty()));
-        
-        Doctor savedDoctor = new Doctor();
-        savedDoctor.setId(UUID.randomUUID());
-        savedDoctor.setName("Dr. Test");
-        
-        when(repository.save(any(Doctor.class))).thenReturn(savedDoctor);
-        when(doctorMapper.toDto(savedDoctor)).thenReturn(new DoctorResponse(savedDoctor.getId(), "Dr. Test", "123456-SP", Collections.emptySet()));
+    void listDoctors_ShouldReturnList() {
+        when(doctorRepository.findAll()).thenReturn(List.of(new Doctor()));
+        when(doctorMapper.toDto(any())).thenReturn(new DoctorResponse(UUID.randomUUID(), "Dr. Test", "CRM123", Set.of()));
+
+        List<DoctorResponse> result = service.listDoctors();
+
+        assertFalse(result.isEmpty());
+        verify(doctorRepository).findAll();
+    }
+
+    @Test
+    void createDoctor_ShouldSaveDoctor() {
+        DoctorRequest request = new DoctorRequest("Dr. Test", "CRM123", Set.of());
+        Doctor doctor = new Doctor();
+        doctor.setName(request.name());
+        doctor.setCrm(request.crm());
+
+        when(doctorRepository.save(any())).thenReturn(doctor);
+        when(doctorMapper.toDto(doctor)).thenReturn(new DoctorResponse(UUID.randomUUID(), "Dr. Test", "CRM123", Set.of()));
 
         DoctorResponse response = service.createDoctor(request);
 
         assertNotNull(response);
-        assertEquals("Dr. Test", response.name());
-        verify(repository).save(any(Doctor.class));
+        verify(doctorRepository).save(any());
     }
 
     @Test
-    void delete_ShouldMarkAsDeleted() {
-        UUID docId = UUID.randomUUID();
+    void findById_ShouldReturnDoctor_WhenFound() {
+        UUID id = UUID.randomUUID();
+        Doctor doctor = new Doctor();
+        when(doctorRepository.findById(id)).thenReturn(Optional.of(doctor));
+        when(doctorMapper.toDto(doctor)).thenReturn(new DoctorResponse(id, "Dr. Test", "CRM123", Set.of()));
+
+        DoctorResponse response = service.findById(id);
+
+        assertNotNull(response);
+        assertEquals(id, response.id());
+    }
+
+    @Test
+    void findById_ShouldThrowException_WhenNotFound() {
+        UUID id = UUID.randomUUID();
+        when(doctorRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.findById(id));
+    }
+
+    @Test
+    void delete_ShouldMarkAsDeleted_WhenFound() {
+        UUID id = UUID.randomUUID();
         Doctor doctor = new Doctor();
         doctor.setDeleted(false);
-        
-        when(repository.findById(docId)).thenReturn(Optional.of(doctor));
-        
-        service.delete(docId);
-        
+
+        when(doctorRepository.findById(id)).thenReturn(Optional.of(doctor));
+
+        service.delete(id);
+
         assertTrue(doctor.isDeleted());
-        verify(repository).save(doctor);
+        verify(doctorRepository).save(doctor);
     }
-    
+
     @Test
-    void listDoctors_ShouldReturnList() {
-        when(repository.findAll()).thenReturn(List.of(new Doctor()));
-        when(doctorMapper.toDto(any())).thenReturn(new DoctorResponse(UUID.randomUUID(), "Dr", "CRM", Collections.emptySet()));
-        
-        List<DoctorResponse> result = service.listDoctors();
-        
-        assertFalse(result.isEmpty());
+    void delete_ShouldThrowException_WhenNotFound() {
+        UUID id = UUID.randomUUID();
+        when(doctorRepository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> service.delete(id));
     }
 }
