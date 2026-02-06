@@ -91,7 +91,7 @@ class HealthUnitServiceTest {
 
         when(unitMapper.toEntity(request)).thenReturn(entity);
         when(repository.save(entity)).thenReturn(entity);
-        when(unitMapper.toDto(entity)).thenReturn(new HealthUnitResponse(entity.getId(), "Unit 1", "00000000000191", null, null));
+        when(unitMapper.toDto(entity)).thenReturn(new HealthUnitResponse(entity.getId(), "Unit 1", "00000000000191", null, null, null));
         
         when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
 
@@ -147,7 +147,7 @@ class HealthUnitServiceTest {
         
         doNothing().when(accessControlService).checkAccess(unitId);
         when(repository.findById(unitId)).thenReturn(Optional.of(unit));
-        when(unitMapper.toDto(unit)).thenReturn(new HealthUnitResponse(unitId, "Name", "123", null, null));
+        when(unitMapper.toDto(unit)).thenReturn(new HealthUnitResponse(unitId, "Name", "123", null, null, null));
         
         HealthUnitResponse response = service.findById(unitId);
         assertNotNull(response);
@@ -168,7 +168,7 @@ class HealthUnitServiceTest {
         
         when(repository.findAll(any(Specification.class))).thenReturn(List.of(unit));
         when(geocodingService.filterByRadius(anyList(), anyDouble(), anyDouble(), anyDouble(), any())).thenReturn(Map.of(unit, 1.5));
-        when(unitMapper.toDto(any())).thenReturn(new HealthUnitResponse(UUID.randomUUID(), "Unit", "123", null, null));
+        when(unitMapper.toDto(any(), anyString())).thenReturn(new HealthUnitResponse(UUID.randomUUID(), "Unit", "123", null, null, "1.5 km"));
 
         Page<HealthUnitResponse> result = service.findAll(filter, Pageable.unpaged());
 

@@ -9,5 +9,6 @@ public record HealthUnitResponse(
     String name,
     String cnpj,
     AddressResponse address,
-    List<ContactResponse> contacts
+    List<ContactResponse> contacts,
+    String distance
 ) {}

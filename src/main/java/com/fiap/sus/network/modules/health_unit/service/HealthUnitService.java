@@ -129,7 +129,10 @@ public class HealthUnitService {
              
              List<HealthUnitResponse> filteredList = units.stream()
                 .filter(nearbyMap::containsKey)
-                .map(unitMapper::toDto)
+                .map(unit -> {
+                    Double distKm = nearbyMap.get(unit);
+                    return unitMapper.toDto(unit, formatDistance(distKm));
+                })
                 .toList();
              
              log.info("Final nearby search result: {} units within radius", filteredList.size());
@@ -153,5 +156,16 @@ public class HealthUnitService {
         accessControlService.checkAccess(id);
         HealthUnit unit = repository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Unity not found"));
         return unitMapper.toDto(unit);
+    }
+
+    private String formatDistance(Double distKm) {
+        if (distKm == null) return null;
+        
+        if (distKm >= 1.0) {
+            return String.format("%.1f km", distKm);
+        } else {
+            long meters = Math.round(distKm * 1000);
+            return meters + " m";
+        }
     }
 }

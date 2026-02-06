@@ -19,6 +19,10 @@ public class HealthUnitMapper {
     private final AddressMapper addressMapper;
 
     public HealthUnitResponse toDto(HealthUnit entity) {
+        return toDto(entity, null);
+    }
+
+    public HealthUnitResponse toDto(HealthUnit entity, String distance) {
         if (entity == null) return null;
         return new HealthUnitResponse(
             entity.getId(), 
@@ -27,7 +31,8 @@ public class HealthUnitMapper {
             addressMapper.toDto(entity.getAddress()),
             entity.getContacts().stream()
                 .map(c -> new ContactResponse(c.getId(), c.getType(), c.getValue(), c.getDescription()))
-                .collect(Collectors.toList())
+                .collect(Collectors.toList()),
+            distance
         );
     }
 

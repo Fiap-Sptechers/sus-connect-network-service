@@ -48,7 +48,7 @@ class HealthUnitControllerTest {
     @Test
     void create_ShouldReturnCreated() throws Exception {
         HealthUnitRequest request = new HealthUnitRequest("Unit 1", "00000000000191", null, null);
-        HealthUnitResponse response = new HealthUnitResponse(UUID.randomUUID(), "Unit 1", "00000000000191", null, null);
+        HealthUnitResponse response = new HealthUnitResponse(UUID.randomUUID(), "Unit 1", "00000000000191", null, null, null);
 
         when(service.create(any())).thenReturn(response);
 
@@ -70,7 +70,7 @@ class HealthUnitControllerTest {
     @Test
     void getById_ShouldReturnUnit() throws Exception {
         UUID id = UUID.randomUUID();
-        HealthUnitResponse response = new HealthUnitResponse(id, "Unit 1", "00000000000191", null, null);
+        HealthUnitResponse response = new HealthUnitResponse(id, "Unit 1", "00000000000191", null, null, null);
 
         when(service.findById(id)).thenReturn(response);
 
