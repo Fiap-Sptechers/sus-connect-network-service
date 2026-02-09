@@ -1,0 +1,124 @@
+{
+    "project": {
+        "name": "Sus Connect",
+        "description": "Plataforma de orquestração logística para o Sistema Único de Saúde (SUS), focada na eficiência operacional de unidades de pronto atendimento através de inteligência de dados.",
+        "business_context": {
+            "problem_statement": "Distribuição ineficiente de recursos na saúde pública brasileira, resultando em superlotação de unidades centrais enquanto unidades periféricas operam abaixo da capacidade.",
+            "core_innovation": "Algoritmo de Direcionamento por Pesos (ADP) que avalia a 'saúde' da unidade através de indicadores dinâmicos.",
+            "decision_criteria": [
+                {
+                    "criterion": "Capacidade Nominal",
+                    "description": "Médicos e consultórios ativos por especialidade."
+                },
+                {
+                    "criterion": "Ocupação Atual",
+                    "description": "Pacientes em triagem e espera."
+                },
+                {
+                    "criterion": "TMA (Tempo Médio de Atendimento)",
+                    "description": "Velocidade real de processamento por tipo de caso (Leve, Moderado, Grave)."
+                },
+                {
+                    "criterion": "Distância Geográfica",
+                    "description": "Tempo estimado de deslocamento do paciente."
+                }
+            ],
+            "dynamic_weights_scenarios": {
+                "normal": "Prioriza TMA e Espera para atendimento rápido.",
+                "logistics_crisis": "Prioriza Distância Geográfica (ex: greves ou problemas de transporte).",
+                "epidemiological_outbreak": "Prioriza Especialidade médica focada na patologia."
+            },
+            "expected_results": {
+                "operational": "Balanceamento de carga e previsibilidade do tempo de espera.",
+                "social": "Equidade no acesso e redução de sequelas por agilidade no atendimento.",
+                "management": "Dados em tempo real para investimentos baseados em evidências."
+            }
+        },
+        "technical_context": {
+            "stack_base": {
+                "language": "Java 21",
+                "framework": "Spring Boot 3.4.x",
+                "boilerplate": "Lombok",
+                "testing": "JUnit 5 + Mockito",
+                "quality_gate": "Mínimo de 80% de cobertura (Jacoco)"
+            },
+            "architecture_principles": {
+                "immutability": "Uso de Java Records para DTOs.",
+                "observability": "Micrometer, Prometheus e Grafana.",
+                "traceability": "Spring Cloud Sleuth / Micrometer Tracing (traceId/spanId).",
+                "logging": "Padrão SLF4J com @Slf4j.",
+                "configuration": "@ConfigurationProperties para acesso tipado."
+            },
+            "ecosystem_services": [
+                {
+                    "id": "sus-connect-network-service",
+                    "name": "Network Service",
+                    "role": "Identity Provider e Governança da Rede",
+                    "stack": "MVC + PostgreSQL/MySQL + Flyway",
+                    "responsibilities": [
+                        "Autenticação Administrativa (JWT)",
+                        "CRUD de Unidades, Especialidades e Médicos",
+                        "Gestão de Plantões",
+                        "Geocodificação de endereços"
+                    ],
+                    "main_entities": [
+                        "Usuario",
+                        "UnidadeSaude",
+                        "Especialidade",
+                        "Medico",
+                        "Plantao"
+                    ]
+                },
+                {
+                    "id": "sus-connect-liveops-service",
+                    "name": "LiveOps Service",
+                    "role": "Fluxo Transacional de Pacientes (Alta Escrita)",
+                    "stack": "MVC + MongoDB + Mongock",
+                    "responsibilities": [
+                        "Gestão do ciclo de vida do atendimento (Triagem -> Atendimento -> Alta)",
+                        "Cálculo de métricas de performance em tempo real (TMA)",
+                        "Validação de JWT contra Network Service"
+                    ],
+                    "main_entities": [
+                        "Paciente",
+                        "Triagem",
+                        "Atendimento"
+                    ]
+                },
+                {
+                    "id": "sus-connect-traffic-intelligence",
+                    "name": "Decision Service",
+                    "role": "Motor Analítico e Orquestração",
+                    "stack": "DDD + Redis (Cache TTL curto)",
+                    "responsibilities": [
+                        "Cálculo do Algoritmo de Pesos",
+                        "Agregador de dados Geográficos e Operacionais",
+                        "Endpoint público de consulta de rota ideal"
+                    ],
+                    "domain_entities": [
+                        "MotorDecisao",
+                        "CriterioPeso",
+                        "SugestaoOrdenada"
+                    ]
+                }
+            ]
+        },
+        "current_workspace": {
+            "service": "sus-connect-network-service",
+            "modules": [
+                "doctor",
+                "health_unit",
+                "shift",
+                "specialty",
+                "user"
+            ],
+            "active_features": [
+                "Geolocalização Nominatim (OpenStreetMap)",
+                "Busca por raio com fórmula de Haversine",
+                "Autenticação JWT (Identity Provider)",
+                "Gestão de unidades de saúde e profissionais",
+                "Monitoramento com Prometheus, Grafana e Loki"
+            ]
+        }
+    }
+}

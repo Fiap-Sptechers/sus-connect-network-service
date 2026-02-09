@@ -1,16 +1,3 @@
-# Ignore everything
-*
-
-# Allow all directories to be scanned
-!*/
-
-# Whitelist allowed extensions
-!*.yml
-!*.xml
-!*.md
-!*.java
-!.gitignore
-
 # Explicitly ignore requested and common folders
 .idea/
 target/
@@ -25,3 +12,4 @@ build/
 node_modules/
 dist/
 .history/
+*.csv
