@@ -36,16 +36,18 @@ class ShiftServiceTest {
     private ShiftService service;
 
     @Test
-    void updateShift_ShouldSaveShift() {
+    void updateShift_ShouldSaveShiftWithCapacity() {
         UUID unitId = UUID.randomUUID();
-        ShiftUpdateRequest request = new ShiftUpdateRequest(unitId, SpecialtyEnum.CLINICA_GERAL, 5);
+        ShiftUpdateRequest request = new ShiftUpdateRequest(unitId, SpecialtyEnum.CLINICA_GERAL, 10);
 
         when(repository.findByUnitIdAndSpecialtyName(any(), any())).thenReturn(Optional.empty());
         when(specialtyRepository.findByName(any())).thenReturn(Optional.of(new Specialty()));
 
         service.updateShift(request);
 
-        verify(repository).save(any());
+        verify(repository).save(argThat(shift -> 
+            shift.getCapacity().equals(10)
+        ));
     }
 
     @Test

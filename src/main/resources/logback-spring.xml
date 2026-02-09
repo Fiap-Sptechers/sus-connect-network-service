@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
     <include resource="org/springframework/boot/logging/logback/defaults.xml" />
     <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
 
@@ -10,6 +12,8 @@
     <appender name="LOKI" class="com.github.loki4j.logback.Loki4jAppender">
         <http>
             <url>${lokiUrl}</url>
+            <connectionTimeoutMs>1000</connectionTimeoutMs>
+            <requestTimeoutMs>1000</requestTimeoutMs>
         </http>
         <format>
             <label>
@@ -19,12 +23,23 @@
                 <pattern>[%X{traceId:-}, %X{spanId:-}] %level %logger{36} - %msg</pattern>
             </message>
         </format>
+        <send>
+            <batchSize>10</batchSize>
+            <maxRetries>3</maxRetries>
+            <retryTimeoutMs>5000</retryTimeoutMs>
+        </send>
+        <verbose>false</verbose>
     </appender>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
-        <appender-ref ref="LOKI" />
     </root>
+
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="LOKI" />
+        </root>
+    </springProfile>
 
     <logger name="com.fiap.sus.network" level="DEBUG" />
 </configuration>

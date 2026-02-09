@@ -1,6 +1,5 @@
 package com.fiap.sus.network.modules.shift.service;
 
-import com.fiap.sus.network.modules.shift.dto.ShiftUpdate;
 import com.fiap.sus.network.modules.shift.entity.Shift;
 import com.fiap.sus.network.modules.shift.repository.ShiftRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +41,7 @@ public class ShiftService {
                      return new Shift(null, dto.unitId(), esp, 0, new HashSet<>());
                 });
 
-        shift.setWaitingPatients(dto.waitingPatients());
+        shift.setCapacity(dto.capacity());
         
         repository.save(shift);
     }

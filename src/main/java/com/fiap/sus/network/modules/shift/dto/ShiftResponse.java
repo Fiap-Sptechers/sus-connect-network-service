@@ -11,7 +11,7 @@ public record ShiftResponse(
     UUID id,
     UUID unitId,
     SpecialtyResponse specialty,
-    Integer waitingPatients,
+    Integer capacity,
     Integer activeDoctorsCount,
     Set<DoctorResponse> doctors
 ) {}

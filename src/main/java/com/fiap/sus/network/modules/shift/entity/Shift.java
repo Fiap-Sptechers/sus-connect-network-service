@@ -35,8 +35,8 @@ public class Shift extends BaseEntity {
     @JoinColumn(name = "specialty_id", nullable = false)
     private Specialty specialty;
 
-    @Column(name = "waiting_patients")
-    private Integer waitingPatients = 0;
+    @Column(name = "capacity")
+    private Integer capacity = 0;
     
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(

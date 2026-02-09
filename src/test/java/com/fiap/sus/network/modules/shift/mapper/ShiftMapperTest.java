@@ -36,8 +36,7 @@ class ShiftMapperTest {
         entity.setId(UUID.randomUUID());
         entity.setUnitId(UUID.randomUUID());
         entity.setSpecialty(new Specialty());
-        entity.setWaitingPatients(10);
-        entity.setWaitingPatients(10);
+        entity.setCapacity(50);
         entity.setDoctors(Collections.emptySet());
 
         when(specialtyMapper.toDto(any())).thenReturn(null);
@@ -46,7 +45,7 @@ class ShiftMapperTest {
 
         assertNotNull(dto);
         assertEquals(entity.getId(), dto.id());
-        assertEquals(10, dto.waitingPatients());
+        assertEquals(50, dto.capacity());
     }
 
     @Test

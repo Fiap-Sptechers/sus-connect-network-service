@@ -45,7 +45,7 @@ class ShiftControllerTest {
 
     @Test
     void update_ShouldReturnOk() throws Exception {
-        ShiftUpdateRequest request = new ShiftUpdateRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL, 5);
+        ShiftUpdateRequest request = new ShiftUpdateRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL, 10);
         doNothing().when(service).updateShift(any());
 
         mockMvc.perform(put("/shifts")

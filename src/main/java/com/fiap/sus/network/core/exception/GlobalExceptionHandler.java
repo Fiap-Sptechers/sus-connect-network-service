@@ -17,7 +17,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception e) {
         Map<String, String> response = new HashMap<>();
-        response.put("error", e.getMessage());
+        String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
+        response.put("error", message);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
     }
     

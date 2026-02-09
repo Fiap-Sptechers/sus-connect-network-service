@@ -9,5 +9,5 @@ import java.util.UUID;
 public record ShiftUpdateRequest(
     @NotNull UUID unitId,
     @NotNull SpecialtyEnum specialty,
-    @PositiveOrZero Integer waitingPatients
+    @PositiveOrZero Integer capacity
 ) {}

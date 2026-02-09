@@ -29,7 +29,7 @@ public class ShiftMapper {
             entity.getId(), 
             entity.getUnitId(), 
             specialtyMapper.toDto(entity.getSpecialty()), 
-            entity.getWaitingPatients(), 
+            entity.getCapacity(),
             entity.getActiveDoctors(),
             doctorsDto
         );

@@ -1,6 +1,5 @@
 package com.fiap.sus.network.modules.shift.controller;
 
-import com.fiap.sus.network.modules.shift.dto.ShiftUpdate;
 import com.fiap.sus.network.modules.shift.service.ShiftService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
