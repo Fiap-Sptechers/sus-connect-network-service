@@ -98,10 +98,17 @@ public class HealthUnitService {
 
     @Transactional(readOnly = true)
     public Page<HealthUnitResponse> findAll(HealthUnitFilter filter, Pageable pageable) {
-        CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        boolean isAdmin = accessControlService.isAdmin();
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = null;
+        boolean isAdmin = false;
         
-        
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails) {
+            userId = userDetails.getId();
+            isAdmin = accessControlService.isAdmin();
+            log.debug("Requisição autenticada - userId: {}, isAdmin: {}", userId, isAdmin);
+        } else {
+            log.debug("Requisição pública - sem autenticação");
+        }
         
         if (filter.baseAddress() != null && filter.radius() != null && filter.distanceUnit() != null) {
              double radiusInKm = filter.distanceUnit().toKilometers(filter.radius());
@@ -120,20 +127,103 @@ public class HealthUnitService {
                      location.lat(), location.lon(), radiusInKm, bbox[0], bbox[1], bbox[2], bbox[3]);
              
              // Use original filter (don't override city/state with geocoded info to avoid strict match failures)
-             Specification<HealthUnit> optimizedSpec = HealthUnitSpecification.withFilter(filter, user.getId(), isAdmin, bbox[0], bbox[1], bbox[2], bbox[3]);
+             Specification<HealthUnit> optimizedSpec = HealthUnitSpecification.withFilter(filter, userId, isAdmin, bbox[0], bbox[1], bbox[2], bbox[3]);
              
-             List<HealthUnit> units = repository.findAll(optimizedSpec);
-             log.debug("Found {} units in bounding box", units.size());
              
-             Map<HealthUnit, Double> nearbyMap = geocodingService.filterByRadius(units, location.lat(), location.lon(), radiusInKm, DistanceUnit.KM);
+             int dbBatchSize = 200;
+             int maxBatches = 50;
              
-             List<HealthUnitResponse> filteredList = units.stream()
-                .filter(nearbyMap::containsKey)
-                .map(unit -> {
-                    Double distKm = nearbyMap.get(unit);
-                    return unitMapper.toDto(unit, formatDistance(distKm));
-                })
-                .toList();
+             java.util.concurrent.ConcurrentLinkedQueue<java.util.Map.Entry<HealthUnit, Double>> nearbyQueue = 
+                 new java.util.concurrent.ConcurrentLinkedQueue<>();
+             
+             int totalProcessed = 0;
+             int batchNumber = 0;
+             
+             while (batchNumber < maxBatches) {
+                 Pageable dbPageable = org.springframework.data.domain.PageRequest.of(batchNumber, dbBatchSize);
+                 Page<HealthUnit> dbPage = repository.findAll(optimizedSpec, dbPageable);
+                 
+                 if (dbPage.isEmpty()) {
+                     break;
+                 }
+                 
+                 List<HealthUnit> batch = dbPage.getContent();
+                 log.debug("Processing database batch {}: {} units (total processed: {})", 
+                         batchNumber + 1, batch.size(), totalProcessed);
+                 
+                 List<HealthUnit> batchCopy = new java.util.ArrayList<>(batch.size());
+                 for (HealthUnit unit : batch) {
+                     if (unit != null) {
+                         try {
+                             if (unit.getAddress() != null) {
+                                 Double lat = unit.getAddress().getLatitude();
+                                 Double lon = unit.getAddress().getLongitude();
+                                 if (lat != null && lon != null) {
+                                     try {
+                                         org.hibernate.Hibernate.initialize(unit.getContacts());
+                                     } catch (Exception e) {
+                                         if (unit.getContacts() != null) {
+                                             java.util.List<com.fiap.sus.network.modules.health_unit.entity.Contact> contactsCopy = 
+                                                 new java.util.ArrayList<>(unit.getContacts());
+                                             for (com.fiap.sus.network.modules.health_unit.entity.Contact c : contactsCopy) {
+                                                 if (c != null) {
+                                                     c.getId();
+                                                 }
+                                             }
+                                         }
+                                     }
+                                     batchCopy.add(unit);
+                                 }
+                             }
+                         } catch (Exception e) {
+                             log.debug("Erro ao materializar unidade {}: {}. Pulando...", unit.getId(), e.getMessage());
+                         }
+                     }
+                 }
+                 
+                 Map<HealthUnit, Double> batchNearbyMap = geocodingService.filterByRadius(
+                     batchCopy, location.lat(), location.lon(), radiusInKm, DistanceUnit.KM);
+                 
+                 for (java.util.Map.Entry<HealthUnit, Double> entry : batchNearbyMap.entrySet()) {
+                     nearbyQueue.offer(entry);
+                 }
+                 
+                 totalProcessed += batch.size();
+                 
+                 if (batch.size() < dbBatchSize) {
+                     break;
+                 }
+                 
+                 batchNumber++;
+                 
+                 if (!pageable.isUnpaged() && nearbyQueue.size() >= (pageable.getOffset() + pageable.getPageSize())) {
+                     log.debug("Enough units collected for pagination. Stopping database queries.");
+                     break;
+                 }
+             }
+             
+             log.debug("Filtered to {} units within radius (from {} processed)", nearbyQueue.size(), totalProcessed);
+             
+             List<java.util.Map.Entry<HealthUnit, Double>> allNearbyUnits = new java.util.ArrayList<>(nearbyQueue);
+             allNearbyUnits.sort(java.util.Map.Entry.comparingByValue());
+             
+             List<HealthUnitResponse> filteredList = new java.util.ArrayList<>(allNearbyUnits.size());
+             for (int i = 0; i < allNearbyUnits.size(); i++) {
+                 try {
+                     java.util.Map.Entry<HealthUnit, Double> entry = allNearbyUnits.get(i);
+                     HealthUnit unit = entry.getKey();
+                     Double distKm = entry.getValue();
+                     
+                     HealthUnitResponse dto = unitMapper.toDto(unit, formatDistance(distKm));
+                     if (dto != null) {
+                         filteredList.add(dto);
+                     }
+                 } catch (java.util.ConcurrentModificationException e) {
+                     log.warn("ConcurrentModificationException ao processar unidade no índice {}. Pulando...", i);
+                 } catch (Exception e) {
+                     log.warn("Erro ao processar unidade no índice {}: {}. Pulando...", i, e.getMessage());
+                 }
+             }
              
              log.info("Final nearby search result: {} units within radius", filteredList.size());
                 
@@ -145,9 +235,12 @@ public class HealthUnitService {
              int end = Math.min((start + pageable.getPageSize()), filteredList.size());
              if (start > filteredList.size()) return Page.empty(pageable);
              
-             return new PageImpl<>(filteredList.subList(start, end), pageable, filteredList.size());
+             List<HealthUnitResponse> pageContent = new java.util.ArrayList<>(
+                 filteredList.subList(start, end));
+             
+             return new PageImpl<>(pageContent, pageable, filteredList.size());
         } else {
-             Specification<HealthUnit> spec = HealthUnitSpecification.withFilter(filter, user.getId(), isAdmin);
+             Specification<HealthUnit> spec = HealthUnitSpecification.withFilter(filter, userId, isAdmin);
              return repository.findAll(spec, pageable).map(unitMapper::toDto);
         }
     }

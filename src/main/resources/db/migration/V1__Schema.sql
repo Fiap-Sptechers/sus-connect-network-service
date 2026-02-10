@@ -1,7 +1,7 @@
 -- Enable pgcrypto extension for UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(50) NOT NULL UNIQUE,
     level INTEGER NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE roles (
     updated_by_user UUID
 );
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     cpf_cnpj VARCHAR(14) NOT NULL UNIQUE,
@@ -24,7 +24,7 @@ CREATE TABLE users (
     updated_by_user UUID
 );
 
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
     user_id UUID NOT NULL,
     role_id UUID NOT NULL,
     PRIMARY KEY (user_id, role_id),
@@ -32,7 +32,7 @@ CREATE TABLE user_roles (
     CONSTRAINT fk_user_roles_role FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 
-CREATE TABLE addresses (
+CREATE TABLE IF NOT EXISTS addresses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     street VARCHAR(255) NOT NULL,
     number VARCHAR(50) NOT NULL,
@@ -50,7 +50,7 @@ CREATE TABLE addresses (
     updated_by_user UUID
 );
 
-CREATE TABLE health_units (
+CREATE TABLE IF NOT EXISTS health_units (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     address_id UUID NOT NULL UNIQUE,
@@ -63,7 +63,7 @@ CREATE TABLE health_units (
     CONSTRAINT fk_unit_address FOREIGN KEY (address_id) REFERENCES addresses (id)
 );
 
-CREATE TABLE health_unit_contacts (
+CREATE TABLE IF NOT EXISTS health_unit_contacts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     type VARCHAR(20) NOT NULL,
     value VARCHAR(255) NOT NULL,
@@ -77,7 +77,7 @@ CREATE TABLE health_unit_contacts (
     CONSTRAINT fk_contact_unit FOREIGN KEY (unit_id) REFERENCES health_units(id)
 );
 
-CREATE TABLE specialties (
+CREATE TABLE IF NOT EXISTS specialties (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL UNIQUE,
     deleted BOOLEAN DEFAULT FALSE NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE specialties (
     updated_by_user UUID
 );
 
-CREATE TABLE shifts (
+CREATE TABLE IF NOT EXISTS shifts (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     unit_id UUID NOT NULL,
     specialty_id UUID NOT NULL,
@@ -101,7 +101,7 @@ CREATE TABLE shifts (
     CONSTRAINT fk_shift_specialty FOREIGN KEY (specialty_id) REFERENCES specialties (id)
 );
 
-CREATE TABLE doctors (
+CREATE TABLE IF NOT EXISTS doctors (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
     crm VARCHAR(50) NOT NULL UNIQUE,
@@ -112,7 +112,7 @@ CREATE TABLE doctors (
     updated_by_user UUID
 );
 
-CREATE TABLE doctors_specialties (
+CREATE TABLE IF NOT EXISTS doctors_specialties (
     doctor_id UUID NOT NULL,
     specialty_id UUID NOT NULL,
     PRIMARY KEY (doctor_id, specialty_id),
@@ -120,7 +120,7 @@ CREATE TABLE doctors_specialties (
     CONSTRAINT fk_doctors_spec_specialty FOREIGN KEY (specialty_id) REFERENCES specialties (id)
 );
 
-CREATE TABLE shifts_doctors (
+CREATE TABLE IF NOT EXISTS shifts_doctors (
     shift_id UUID NOT NULL,
     doctor_id UUID NOT NULL,
     PRIMARY KEY (shift_id, doctor_id),
@@ -128,7 +128,7 @@ CREATE TABLE shifts_doctors (
     CONSTRAINT fk_shifts_doctors_doctor FOREIGN KEY (doctor_id) REFERENCES doctors (id)
 );
 
-CREATE TABLE user_units (
+CREATE TABLE IF NOT EXISTS user_units (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     unit_id UUID NOT NULL,
@@ -143,6 +143,6 @@ CREATE TABLE user_units (
     CONSTRAINT fk_user_unit_role FOREIGN KEY (role_id) REFERENCES roles (id)
 );
 
-CREATE INDEX idx_addresses_lat_long ON addresses (latitude, longitude);
-CREATE INDEX idx_health_units_name ON health_units (name);
-CREATE INDEX idx_health_units_cnpj ON health_units (cnpj);
+CREATE INDEX IF NOT EXISTS idx_addresses_lat_long ON addresses (latitude, longitude);
+CREATE INDEX IF NOT EXISTS idx_health_units_name ON health_units (name);
+CREATE INDEX IF NOT EXISTS idx_health_units_cnpj ON health_units (cnpj);

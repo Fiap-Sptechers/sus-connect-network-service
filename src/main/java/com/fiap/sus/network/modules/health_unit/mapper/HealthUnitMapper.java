@@ -24,14 +24,40 @@ public class HealthUnitMapper {
 
     public HealthUnitResponse toDto(HealthUnit entity, String distance) {
         if (entity == null) return null;
+        
+        List<ContactResponse> contacts = java.util.Collections.emptyList();
+        try {
+            java.util.Collection<Contact> contactsCollection = entity.getContacts();
+            if (contactsCollection != null && !contactsCollection.isEmpty()) {
+                Contact[] contactsArray = contactsCollection.toArray(new Contact[0]);
+                
+                contacts = java.util.Arrays.stream(contactsArray)
+                    .filter(c -> c != null && !c.isDeleted())
+                    .map(c -> new ContactResponse(c.getId(), c.getType(), c.getValue(), c.getDescription()))
+                    .collect(Collectors.toList());
+            }
+        } catch (java.util.ConcurrentModificationException e) {
+            try {
+                if (entity.getContacts() != null) {
+                    List<Contact> contactsCopy = new java.util.ArrayList<>(entity.getContacts());
+                    contacts = contactsCopy.stream()
+                        .filter(c -> c != null && !c.isDeleted())
+                        .map(c -> new ContactResponse(c.getId(), c.getType(), c.getValue(), c.getDescription()))
+                        .collect(Collectors.toList());
+                }
+            } catch (Exception e2) {
+                contacts = java.util.Collections.emptyList();
+            }
+        } catch (Exception e) {
+            contacts = java.util.Collections.emptyList();
+        }
+        
         return new HealthUnitResponse(
             entity.getId(), 
             entity.getName(), 
             entity.getCnpj(),
             addressMapper.toDto(entity.getAddress()),
-            entity.getContacts().stream()
-                .map(c -> new ContactResponse(c.getId(), c.getType(), c.getValue(), c.getDescription()))
-                .collect(Collectors.toList()),
+            contacts,
             distance
         );
     }
