@@ -1,0 +1,16 @@
+target/
+!.jar
+.git/
+.idea/
+.vscode/
+*.iml
+.gitignore
+Dockerfile
+docker-compose.yml
+README.md
+project_context.json
+postman_collection.json
+cnes_estabelecimentos.csv
+import_cnes.py
+grafana_dashboard.json
+prometheus.yml
