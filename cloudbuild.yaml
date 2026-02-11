@@ -1,0 +1,118 @@
+# Cloud Build configuration para deploy automático no Cloud Run para Network Service
+# Este arquivo permite deploy contínuo quando há push no repositório
+
+steps:
+  # Step 0: Executar testes (opcional - descomente se quiser testes no pipeline)
+  # - name: 'maven:3.9-eclipse-temurin-21'
+  #   id: 'run-tests'
+  #   entrypoint: 'mvn'
+  #   args: ['test', '-B']
+  #   waitFor: ['-']
+
+  # Step 1: Build da imagem Docker
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'build-image'
+    args:
+      - 'build'
+      - '--build-arg'
+      - 'BUILDKIT_INLINE_CACHE=1'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:latest'
+      - '-t'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:${_BRANCH_NAME}'
+      - '-f'
+      - 'Dockerfile'
+      - '.'
+    waitFor: ['-']  # Mude para ['run-tests'] se habilitar testes
+
+  # Step 2: Push da imagem para Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'push-image'
+    args:
+      - 'push'
+      - '--all-tags'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}'
+    waitFor: ['build-image']
+
+  # Step 3: Deploy no Cloud Run (apenas para branch main)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    id: 'deploy-cloud-run'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - '${_SERVICE_NAME}'
+      - '--image'
+      - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA'
+      - '--platform'
+      - 'managed'
+      - '--region'
+      - '${_REGION}'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '${_MEMORY:-1Gi}'
+      - '--cpu'
+      - '${_CPU:-1}'
+      - '--timeout'
+      - '300'
+      - '--max-instances'
+      - '${_MAX_INSTANCES:-10}'
+      - '--min-instances'
+      - '${_MIN_INSTANCES:-0}'
+      - '--concurrency'
+      - '${_CONCURRENCY:-80}'
+      - '--port'
+      - '${_PORT:-8080}'
+      - '--set-env-vars'
+      - 'SPRING_PROFILES_ACTIVE=${_SPRING_PROFILE:-prod}'
+      # Secrets do Banco de Dados (PostgreSQL)
+      # Assume que os secrets foram criados no Secret Manager
+      - '--set-secrets'
+      - 'SPRING_DATASOURCE_USERNAME=network_db_user:latest'
+      - '--set-secrets'
+      - 'SPRING_DATASOURCE_PASSWORD=network_db_password:latest'
+      - '--set-secrets'
+      - 'SPRING_DATASOURCE_URL=network_db_url:latest' # jdbc:postgresql:///... se socket factory, ou IP
+      # Conexão com Cloud SQL via Socket (se configurado)
+      - '--add-cloudsql-instances'
+      - '${_CLOUD_SQL_INSTANCE}'
+      # Revisão
+      - '--revision-suffix'
+      - '${SHORT_SHA}'
+    waitFor: ['push-image']
+
+# Substitutions (valores padrão - podem ser sobrescritos)
+substitutions:
+  _REGION: us-central1
+  _ARTIFACT_REGISTRY_REPO: sus-connect
+  _SERVICE_NAME: sus-connect-network-service
+  _MEMORY: '1Gi' # Network service geralmente precisa de menos RAM que analytics
+  _CPU: '1'
+  _MAX_INSTANCES: '5' # Ajustado para service menos crítico em escala massiva que analytics
+  _MIN_INSTANCES: '0'
+  _CONCURRENCY: '80'
+  _PORT: '8080'
+  _SPRING_PROFILE: 'prod'
+  _BRANCH_NAME: ${BRANCH_NAME}
+  # Placeholder para a instância do Cloud SQL - deve ser substituído via gatilho ou command line
+  _CLOUD_SQL_INSTANCE: 'sus-connect:us-central1:sus-connect-network-service-postgresql'
+
+# Opções do Cloud Build
+options:
+  machineType: 'E2_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
+  pool: {}
+  env:
+    - 'DOCKER_BUILDKIT=1'
+    - 'BUILDKIT_INLINE_CACHE=1'
+
+# Timeout do build (20 minutos)
+timeout: '1200s'
+
+# Imagens a serem armazenadas no cache
+images:
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:$SHORT_SHA'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:latest'
+  - '${_REGION}-docker.pkg.dev/$PROJECT_ID/${_ARTIFACT_REGISTRY_REPO}/${_SERVICE_NAME}:${_BRANCH_NAME}'
