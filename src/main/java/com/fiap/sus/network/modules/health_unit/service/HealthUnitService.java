@@ -98,10 +98,14 @@ public class HealthUnitService {
 
     @Transactional(readOnly = true)
     public Page<HealthUnitResponse> findAll(HealthUnitFilter filter, Pageable pageable) {
-        CustomUserDetails user = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        boolean isAdmin = accessControlService.isAdmin();
-        
-        
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UUID userId = null;
+        boolean isAdmin = false;
+
+        if (auth != null && auth.getPrincipal() instanceof CustomUserDetails userDetails) {
+            userId = userDetails.getId();
+            isAdmin = accessControlService.isAdmin();
+        }
         
         if (filter.baseAddress() != null && filter.radius() != null && filter.distanceUnit() != null) {
              double radiusInKm = filter.distanceUnit().toKilometers(filter.radius());
@@ -120,7 +124,7 @@ public class HealthUnitService {
                      location.lat(), location.lon(), radiusInKm, bbox[0], bbox[1], bbox[2], bbox[3]);
              
              // Use original filter (don't override city/state with geocoded info to avoid strict match failures)
-             Specification<HealthUnit> optimizedSpec = HealthUnitSpecification.withFilter(filter, user.getId(), isAdmin, bbox[0], bbox[1], bbox[2], bbox[3]);
+             Specification<HealthUnit> optimizedSpec = HealthUnitSpecification.withFilter(filter, userId, isAdmin, bbox[0], bbox[1], bbox[2], bbox[3]);
              
              List<HealthUnit> units = repository.findAll(optimizedSpec);
              log.debug("Found {} units in bounding box", units.size());
@@ -147,7 +151,7 @@ public class HealthUnitService {
              
              return new PageImpl<>(filteredList.subList(start, end), pageable, filteredList.size());
         } else {
-             Specification<HealthUnit> spec = HealthUnitSpecification.withFilter(filter, user.getId(), isAdmin);
+             Specification<HealthUnit> spec = HealthUnitSpecification.withFilter(filter, userId, isAdmin);
              return repository.findAll(spec, pageable).map(unitMapper::toDto);
         }
     }
