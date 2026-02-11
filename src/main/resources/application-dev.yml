@@ -40,7 +40,13 @@ management:
 jwt:
   secret: "my-secret-key-must-be-very-long-and-secure-enough-for-hs256-algorithm"
   expiration: 86400000
+  liveops:
+    private-key: ${LIVEOPS_PRIVATE_KEY}
+    issuer: sus-connect-network-api
+    audience: sus-connect-liveops-api
 
 app:
   geocoding:
     url: "https://nominatim.openstreetmap.org/search"
+  liveops:
+    url: ${LIVEOPS_URL:http://localhost:8081}

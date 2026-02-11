@@ -39,7 +39,13 @@ management:
 jwt:
   secret: ${JWT_SECRET}
   expiration: ${JWT_EXPIRATION:86400000}
+  liveops:
+    private-key: ${LIVEOPS_PRIVATE_KEY}
+    issuer: sus-connect-network-api
+    audience: sus-connect-liveops-api
 
 app:
   geocoding:
     url: ${GEOCODING_URL}
+  liveops:
+    url: ${LIVEOPS_URL}
