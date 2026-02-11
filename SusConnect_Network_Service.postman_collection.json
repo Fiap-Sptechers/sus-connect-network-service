@@ -1,7 +1,7 @@
 {
     "info": {
         "_postman_id": "sus-connect-api-test",
-        "name": "Sus Connect - Network Service",
+        "name": "Sus Connect - Network Service (GCP)",
         "description": "API para governança da rede de saúde, autenticação e gestão de plantões.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
@@ -10,7 +10,7 @@
             "name": "Auth",
             "item": [
                 {
-                    "name": "Login Admin",
+                    "name": "Login",
                     "event": [
                         {
                             "listen": "test",
@@ -47,110 +47,12 @@
                         }
                     },
                     "response": []
-                },
-                {
-                    "name": "Criar Usuário (Gestor)",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"name\": \"Manager One\",\n    \"cpfCnpj\": \"98765432100\",\n    \"password\": \"password123\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/auth/users",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "auth",
-                                "users"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Listar Usuários (Capture User ID)",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "// Find user with cpf 98765432100",
-                                    "var user = jsonData.find(u => u.cpfCnpj === \"98765432100\");",
-                                    "if (user) {",
-                                    "    pm.environment.set(\"user_id\", user.id);",
-                                    "}"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/users",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "users"
-                            ]
-                        }
-                    },
-                    "response": []
                 }
             ]
         },
         {
             "name": "Health Units",
             "item": [
-                {
-                    "name": "Cadastrar Unidade",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "pm.environment.set(\"unit_id\", jsonData.id);"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"name\": \"UBS Santa Cecília\",\n    \"cnpj\": \"12345678000199\",\n    \"address\": {\n        \"street\": \"Rua Major Sertório\",\n        \"number\": \"200\",\n        \"neighborhood\": \"Vila Buarque\",\n        \"city\": \"São Paulo\",\n        \"state\": \"SP\",\n        \"zipCode\": \"01222001\",\n        \"latitude\": -23.5432,\n        \"longitude\": -46.6543\n    }\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/units",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "units"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
                 {
                     "name": "Listar Unidades",
                     "request": {
@@ -179,157 +81,39 @@
                     "response": []
                 },
                 {
-                    "name": "Adicionar Membro à Unidade",
+                    "name": "Unidades Próximas (Nearby)",
                     "request": {
-                        "method": "POST",
+                        "method": "GET",
                         "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"userId\": \"{{user_id}}\",\n    \"roleName\": \"MANAGER\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
                         "url": {
-                            "raw": "{{base_url}}/units/{{unit_id}}/users",
+                            "raw": "{{base_url}}/units/nearby?latitude=-23.55&longitude=-46.63&radius=5",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "units",
-                                "{{unit_id}}",
-                                "users"
-                            ]
-                        }
-                    },
-                    "response": []
-                }
-            ]
-        },
-        {
-            "name": "Doctors & Specialties",
-            "item": [
-                {
-                    "name": "Listar Especialidades",
-                    "event": [
-                        {
-                            "listen": "test",
-                            "script": {
-                                "exec": [
-                                    "var jsonData = pm.response.json();",
-                                    "if (jsonData.length > 0) {",
-                                    "    pm.environment.set(\"specialty_id\", jsonData[0].id);",
-                                    "}",
-                                    "var clinica = jsonData.find(s => s.name === 'CLINICA_GERAL');",
-                                    "if(clinica) pm.environment.set(\"clinica_id\", clinica.id);"
-                                ],
-                                "type": "text/javascript"
-                            }
-                        }
-                    ],
-                    "request": {
-                        "method": "GET",
-                        "header": [],
-                        "url": {
-                            "raw": "{{base_url}}/specialties",
-                            "host": [
-                                "{{base_url}}"
+                                "nearby"
                             ],
-                            "path": [
-                                "specialties"
+                            "query": [
+                                {
+                                    "key": "latitude",
+                                    "value": "-23.55"
+                                },
+                                {
+                                    "key": "longitude",
+                                    "value": "-46.63"
+                                },
+                                {
+                                    "key": "radius",
+                                    "value": "5"
+                                }
                             ]
                         }
                     },
                     "response": []
                 },
                 {
-                    "name": "Criar Médico",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"name\": \"Dr. João Silva\",\n    \"crm\": \"123456-SP\",\n    \"specialtyIds\": [\"{{specialty_id}}\"]\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/doctors",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "doctors"
-                            ]
-                        }
-                    },
-                    "response": []
-                }
-            ]
-        },
-        {
-            "name": "Shifts",
-            "item": [
-                {
-                    "name": "Definir Escala Médica",
-                    "request": {
-                        "method": "POST",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"unitId\": \"{{unit_id}}\",\n    \"specialty\": \"CLINICA_GERAL\",\n    \"doctorCrms\": [\"123456-SP\"]\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/shifts/schedule",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "shifts",
-                                "schedule"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Atualizar Ocupação",
-                    "request": {
-                        "method": "PUT",
-                        "header": [],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"unitId\": \"{{unit_id}}\",\n    \"specialty\": \"CLINICA_GERAL\",\n    \"waitingPatients\": 5\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/shifts",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "shifts"
-                            ]
-                        }
-                    },
-                    "response": []
-                },
-                {
-                    "name": "Ver Status Unit",
+                    "name": "Ver Status Unidade",
                     "request": {
                         "method": "GET",
                         "header": [],
@@ -348,6 +132,29 @@
                     "response": []
                 }
             ]
+        },
+        {
+            "name": "Actuator (Monitoring)",
+            "item": [
+                {
+                    "name": "Health Check",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/actuator/health",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "actuator",
+                                "health"
+                            ]
+                        }
+                    },
+                    "response": []
+                }
+            ]
         }
     ],
     "auth": {
@@ -360,30 +167,10 @@
             }
         ]
     },
-    "event": [
-        {
-            "listen": "prerequest",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    ""
-                ]
-            }
-        },
-        {
-            "listen": "test",
-            "script": {
-                "type": "text/javascript",
-                "exec": [
-                    ""
-                ]
-            }
-        }
-    ],
     "variable": [
         {
             "key": "base_url",
-            "value": "http://localhost:8080",
+            "value": "https://sus-connect-network-service-909154055149.us-central1.run.app",
             "type": "string"
         },
         {
@@ -393,16 +180,6 @@
         },
         {
             "key": "unit_id",
-            "value": "",
-            "type": "string"
-        },
-        {
-            "key": "user_id",
-            "value": "",
-            "type": "string"
-        },
-        {
-            "key": "specialty_id",
             "value": "",
             "type": "string"
         }
