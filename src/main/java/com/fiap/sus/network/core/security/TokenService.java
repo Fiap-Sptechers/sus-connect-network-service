@@ -56,15 +56,21 @@ public class TokenService {
     private List<Map<String, Object>> buildRolesClaim(User user) {
         List<Map<String, Object>> roles = new ArrayList<>();
         
-        // Global roles
-        user.getGlobalRoles().forEach(role -> {
-            roles.add(Map.of("role", role.getName(), "unitId", "GLOBAL", "level", role.getLevel()));
-        });
+        // Global roles - Defensive copy to avoid ConcurrentModificationException with Hibernate Sets
+        if (user.getGlobalRoles() != null) {
+            new ArrayList<>(user.getGlobalRoles()).forEach(role -> {
+                roles.add(Map.of("role", role.getName(), "unitId", "GLOBAL", "level", role.getLevel()));
+            });
+        }
         
-        // Unit roles
-        user.getUnitRoles().forEach(ur -> {
-            roles.add(Map.of("role", ur.getRole().getName(), "unitId", ur.getUnit().getId().toString(), "level", ur.getRole().getLevel()));
-        });
+        // Unit roles - Defensive copy
+        if (user.getUnitRoles() != null) {
+            new ArrayList<>(user.getUnitRoles()).forEach(ur -> {
+                if (ur.getRole() != null && ur.getUnit() != null) {
+                    roles.add(Map.of("role", ur.getRole().getName(), "unitId", ur.getUnit().getId().toString(), "level", ur.getRole().getLevel()));
+                }
+            });
+        }
         
         return roles;
     }

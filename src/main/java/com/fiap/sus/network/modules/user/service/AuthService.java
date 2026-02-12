@@ -23,6 +23,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
+    @Transactional(readOnly = true)
     public TokenResponse login(LoginRequest request) {
        User user = userRepository.findByCpfCnpj(request.cpfCnpj())
            .orElseThrow(() -> new ResourceNotFoundException("User not found"));
