@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.ArrayList;
 
 @Getter
 public class CustomUserDetails implements UserDetails {
@@ -32,8 +33,8 @@ public class CustomUserDetails implements UserDetails {
         // But the requirement says "Policy ... he can only interact with resources related to his own health units".
         // This is Authorization Logic, not just Authentication.
         this.authorities = Stream.concat(
-            user.getGlobalRoles() != null ? new java.util.ArrayList<>(user.getGlobalRoles()).stream().map(Role::getName) : Stream.empty(),
-            user.getUnitRoles() != null ? new java.util.ArrayList<>(user.getUnitRoles()).stream().map(ur -> ur.getRole().getName()) : Stream.empty()
+            user.getGlobalRoles() != null ? new ArrayList<>(user.getGlobalRoles()).stream().map(Role::getName) : Stream.empty(),
+            user.getUnitRoles() != null ? new ArrayList<>(user.getUnitRoles()).stream().map(ur -> ur.getRole().getName()) : Stream.empty()
         ).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
@@ -54,6 +55,6 @@ public class CustomUserDetails implements UserDetails {
     public String getName() { return name; }
     public String getUsername() { return cpfCnpj; }
     public String getPassword() { return password; }
-    public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() { return authorities; }
+    public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }
     
 }

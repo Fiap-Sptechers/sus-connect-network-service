@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.security.access.AccessDeniedException;
+import lombok.extern.slf4j.Slf4j;
 
 @RestControllerAdvice
-@lombok.extern.slf4j.Slf4j
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
