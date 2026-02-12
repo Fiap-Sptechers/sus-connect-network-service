@@ -203,4 +203,49 @@ class HealthUnitServiceTest {
 
         verify(repository).findAll(any(Specification.class), any(Pageable.class));
     }
+
+    @Test
+    void findAll_ShouldHandlePagination_WithRadius() {
+        String baseAddr = "Paulista";
+        HealthUnitFilter filter = new HealthUnitFilter(null, null, null, baseAddr, 10.0, DistanceUnit.KM);
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(0, 5);
+
+        when(accessControlService.isAdmin()).thenReturn(true);
+        when(geocodingService.geocode(baseAddr)).thenReturn(new GeocodingService.GeocodedLocation(-23.5, -46.6, "SP", "SP"));
+
+        HealthUnit unit1 = new HealthUnit();
+        unit1.setId(UUID.randomUUID());
+        unit1.setAddress(new Address());
+        unit1.getAddress().setLatitude(-23.51);
+        unit1.getAddress().setLongitude(-46.61);
+        
+        List<HealthUnit> units = new ArrayList<>();
+        units.add(unit1);
+
+        when(repository.findAll(any(Specification.class))).thenReturn(units);
+        when(geocodingService.filterByRadius(anyList(), anyDouble(), anyDouble(), anyDouble(), any())).thenReturn(Map.of(unit1, 1.5));
+        when(unitMapper.toDto(any(), anyString())).thenReturn(new HealthUnitResponse(unit1.getId(), "U1", "1", null, null, "1.5km"));
+
+        Page<HealthUnitResponse> result = service.findAll(filter, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void findAll_ShouldReturnEmpty_WhenStartExceedsSize() {
+        String baseAddr = "Paulista";
+        HealthUnitFilter filter = new HealthUnitFilter(null, null, null, baseAddr, 10.0, DistanceUnit.KM);
+        Pageable pageable = org.springframework.data.domain.PageRequest.of(5, 5);
+
+        when(accessControlService.isAdmin()).thenReturn(true);
+        when(geocodingService.geocode(baseAddr)).thenReturn(new GeocodingService.GeocodedLocation(-23.5, -46.6, "SP", "SP"));
+        when(repository.findAll(any(Specification.class))).thenReturn(new ArrayList<>());
+        when(geocodingService.filterByRadius(any(), anyDouble(), anyDouble(), anyDouble(), any())).thenReturn(new java.util.HashMap<>());
+
+        Page<HealthUnitResponse> result = service.findAll(filter, pageable);
+
+        assertTrue(result.isEmpty());
+    }
 }
