@@ -3,7 +3,9 @@ target/
 .git/
 .idea/
 .vscode/
+/src/main/resources/certs
 *.iml
+*.pem
 .gitignore
 Dockerfile
 docker-compose.yml

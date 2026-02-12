@@ -12,6 +12,8 @@ build/
 node_modules/
 dist/
 .history/
+/src/main/resources/certs
 *.csv
 command.txt
 .env
+*.pem

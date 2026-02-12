@@ -75,6 +75,10 @@ steps:
       - 'SPRING_DATASOURCE_PASSWORD=network_db_password:latest'
       - '--set-secrets'
       - 'SPRING_DATASOURCE_URL=network_db_url:latest' # jdbc:postgresql:///... se socket factory, ou IP
+      - '--set-secrets'
+      - 'LIVEOPS_PRIVATE_KEY=network-liveops-private-key:latest'
+      - '--set-secrets'
+      - 'LIVEOPS_URL=liveops-service-url:latest'
       # Conexão com Cloud SQL via Socket (se configurado)
       - '--add-cloudsql-instances'
       - '${_CLOUD_SQL_INSTANCE}'
