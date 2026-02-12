@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fiap.sus.network.core.exception.BusinessException;
+import com.fiap.sus.network.core.exception.ExternalServiceException;
 import com.fiap.sus.network.core.exception.ResourceNotFoundException;
 import com.fiap.sus.network.modules.health_unit.dto.HealthUnitStatusResponse;
 import com.fiap.sus.network.modules.health_unit.enums.DistanceUnit;
@@ -58,11 +59,17 @@ public class HealthUnitService {
             throw new BusinessException("CNPJ already registered: " + request.cnpj());
         }
 
-        GeocodingService.GeocodedLocation location = geocodingService.geocode(request.address().toFormattedString());
+        GeocodingService.GeocodedLocation location;
+        try {
+            location = geocodingService.geocode(request.address().toFormattedString());
+        } catch (ExternalServiceException e) {
+            log.error("Geocoding failed for address: {}", request.address().toFormattedString(), e);
+            throw new BusinessException("Não foi possível obter as coordenadas para o endereço informado. Verifique o endereço ou tente novamente mais tarde.");
+        }
         
         HealthUnit unit = unitMapper.toEntity(request);
         
-        if (unit.getAddress() != null) {
+        if (unit.getAddress() != null && location != null) {
             unit.getAddress().setLatitude(location.lat());
             unit.getAddress().setLongitude(location.lon());
         }

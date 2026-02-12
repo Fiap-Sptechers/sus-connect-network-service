@@ -14,24 +14,29 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.fiap.sus.network.core.exception.ResourceNotFoundException;
 import com.fiap.sus.network.modules.specialty.entity.Specialty;
+import lombok.extern.slf4j.Slf4j;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class DoctorService {
 
     private final DoctorRepository doctorRepository;
     private final SpecialtyRepository specialtyRepository;
     private final DoctorMapper doctorMapper;
 
+    @Transactional(readOnly = true)
     public List<DoctorResponse> listDoctors() {
+        log.info("Listing all doctors");
         return doctorRepository.findAll().stream().map(doctorMapper::toDto).toList();
     }
 
     @Transactional
     public DoctorResponse createDoctor(DoctorRequest request) {
+        log.info("Creating doctor: {}", request.name());
         Doctor doctor = new Doctor();
         doctor.setName(request.name());
         doctor.setCrm(request.crm());
@@ -44,13 +49,16 @@ public class DoctorService {
         return doctorMapper.toDto(doctorRepository.save(doctor));
     }
 
+    @Transactional(readOnly = true)
     public DoctorResponse findById(UUID id) {
+        log.info("Finding doctor by id: {}", id);
         Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
         return doctorMapper.toDto(doctor);
     }
 
     @Transactional
     public void delete(UUID id) {
+        log.info("Deleting doctor: {}", id);
         Doctor doctor = doctorRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Doctor not found"));
         doctor.setDeleted(true);
         doctorRepository.save(doctor);
