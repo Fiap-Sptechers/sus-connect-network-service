@@ -32,8 +32,8 @@ public class CustomUserDetails implements UserDetails {
         // But the requirement says "Policy ... he can only interact with resources related to his own health units".
         // This is Authorization Logic, not just Authentication.
         this.authorities = Stream.concat(
-            user.getGlobalRoles().stream().map(Role::getName),
-            user.getUnitRoles().stream().map(ur -> ur.getRole().getName())
+            user.getGlobalRoles() != null ? new java.util.ArrayList<>(user.getGlobalRoles()).stream().map(Role::getName) : Stream.empty(),
+            user.getUnitRoles() != null ? new java.util.ArrayList<>(user.getUnitRoles()).stream().map(ur -> ur.getRole().getName()) : Stream.empty()
         ).map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 

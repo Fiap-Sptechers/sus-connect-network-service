@@ -12,10 +12,12 @@ import java.util.Map;
 import org.springframework.security.access.AccessDeniedException;
 
 @RestControllerAdvice
+@lombok.extern.slf4j.Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleException(Exception e) {
+        log.error("Unhandled exception: ", e);
         Map<String, String> response = new HashMap<>();
         String message = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
         response.put("error", message);

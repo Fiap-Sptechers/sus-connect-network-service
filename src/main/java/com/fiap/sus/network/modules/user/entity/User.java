@@ -17,19 +17,21 @@ import com.fiap.sus.network.shared.entity.BaseEntity;
 @Table(name = "users")
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Where(clause = "deleted = false")
 public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @Column(nullable = false)
     private String name;
 
     @Column(unique = true, nullable = false, name = "cpf_cnpj")
+    @EqualsAndHashCode.Include
     private String cpfCnpj;
 
     @Column(nullable = false)
