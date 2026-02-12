@@ -10,7 +10,7 @@ import java.util.UUID;
 @Table(name = "health_unit_contacts")
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
 @NoArgsConstructor
 @AllArgsConstructor
 @Where(clause = "deleted = false")
@@ -18,6 +18,7 @@ public class Contact extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @EqualsAndHashCode.Include
     private UUID id;
 
     @Enumerated(EnumType.STRING)
