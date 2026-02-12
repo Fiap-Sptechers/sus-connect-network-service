@@ -38,7 +38,7 @@ public class User extends BaseEntity {
     private String password;
 
     // Global roles (e.g. System Admin)
-    @ManyToMany(fetch = FetchType.EAGER)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_roles",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -47,7 +47,7 @@ public class User extends BaseEntity {
     private Set<Role> globalRoles = new HashSet<>();
 
     // Unit-scoped roles
-    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
     private Set<UserUnit> unitRoles = new HashSet<>();
     
     public boolean isAdmin() {
