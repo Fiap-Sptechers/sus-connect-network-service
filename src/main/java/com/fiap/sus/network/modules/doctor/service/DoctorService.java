@@ -15,9 +15,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fiap.sus.network.core.exception.ResourceNotFoundException;
 import com.fiap.sus.network.modules.specialty.entity.Specialty;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
+
+import com.fiap.sus.network.modules.health_unit.repository.HealthUnitRepository;
+import com.fiap.sus.network.modules.user.service.AccessControlService;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +32,22 @@ public class DoctorService {
     private final DoctorRepository doctorRepository;
     private final SpecialtyRepository specialtyRepository;
     private final DoctorMapper doctorMapper;
+    private final HealthUnitRepository healthUnitRepository;
+    private final AccessControlService accessControlService;
+
+    @Transactional(readOnly = true)
+    public Page<DoctorResponse> listByUnitId(UUID unitId, Pageable pageable) {
+        log.info("Listing doctors. Unit filter: {}", unitId);
+        if (unitId != null) {
+            if (!healthUnitRepository.existsById(unitId)) {
+                log.error("Health unit not found: {}", unitId);
+                throw new ResourceNotFoundException("Health unit not found");
+            }
+            accessControlService.checkAccess(unitId);
+            return doctorRepository.findAllByUnitId(unitId, pageable).map(doctorMapper::toDto);
+        }
+        return doctorRepository.findAll(pageable).map(doctorMapper::toDto);
+    }
 
     @Transactional(readOnly = true)
     public List<DoctorResponse> listDoctors() {

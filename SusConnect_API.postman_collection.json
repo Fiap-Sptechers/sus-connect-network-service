@@ -162,12 +162,45 @@
                         "method": "GET",
                         "header": [],
                         "url": {
-                            "raw": "{{baseUrl}}/doctors",
+                            "raw": "{{baseUrl}}/doctors?unitId={{unitId}}&page=0&size=10",
                             "host": [
                                 "{{baseUrl}}"
                             ],
                             "path": [
                                 "doctors"
+                            ],
+                            "query": [
+                                {
+                                    "key": "unitId",
+                                    "value": "{{unitId}}",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Doctor",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/doctors/{{doctorId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "doctors",
+                                "{{doctorId}}"
                             ]
                         }
                     },
@@ -288,6 +321,37 @@
             "name": "Shifts",
             "item": [
                 {
+                    "name": "List Shifts",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/shifts?unitId={{unitId}}&page=0&size=10",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "shifts"
+                            ],
+                            "query": [
+                                {
+                                    "key": "unitId",
+                                    "value": "{{unitId}}"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "0"
+                                },
+                                {
+                                    "key": "size",
+                                    "value": "10"
+                                }
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
                     "name": "Update Capacity",
                     "request": {
                         "method": "PUT",
@@ -335,6 +399,24 @@
                             "path": [
                                 "shifts",
                                 "schedule"
+                            ]
+                        }
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Shift",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{baseUrl}}/shifts/{{shiftId}}",
+                            "host": [
+                                "{{baseUrl}}"
+                            ],
+                            "path": [
+                                "shifts",
+                                "{{shiftId}}"
                             ]
                         }
                     },
@@ -420,6 +502,16 @@
         {
             "key": "unitId",
             "value": "uuid-da-unidade",
+            "type": "string"
+        },
+        {
+            "key": "shiftId",
+            "value": "",
+            "type": "string"
+        },
+        {
+            "key": "doctorId",
+            "value": "",
             "type": "string"
         }
     ]

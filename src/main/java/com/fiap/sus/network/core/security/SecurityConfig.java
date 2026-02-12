@@ -39,6 +39,18 @@ public class SecurityConfig {
                         .requestMatchers("/specialties/**", "/specialties").hasAnyAuthority("ADMIN", "MANAGER")
                         .anyRequest().authenticated()
                 )
+                .exceptionHandling(exception -> exception
+                    .authenticationEntryPoint((request, response, authException) -> {
+                        response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"status\":401,\"error\":\"Unauthorized\",\"message\":\"" + authException.getMessage() + "\",\"path\":\"" + request.getRequestURI() + "\"}");
+                    })
+                    .accessDeniedHandler((request, response, accessDeniedException) -> {
+                        response.setStatus(jakarta.servlet.http.HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"status\":403,\"error\":\"Forbidden\",\"message\":\"Access Denied\",\"path\":\"" + request.getRequestURI() + "\"}");
+                    })
+                )
                 .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }

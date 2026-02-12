@@ -3,15 +3,15 @@ package com.fiap.sus.network.modules.doctor.controller;
 import com.fiap.sus.network.modules.doctor.dto.DoctorRequest;
 import com.fiap.sus.network.modules.doctor.dto.DoctorResponse;
 import com.fiap.sus.network.modules.doctor.service.DoctorService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
-
-import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/doctors")
@@ -21,8 +21,20 @@ public class DoctorController {
     private final DoctorService service;
 
     @GetMapping
-    public ResponseEntity<List<DoctorResponse>> listDoctors() {
-        return ResponseEntity.ok(service.listDoctors());
+    public ResponseEntity<Page<DoctorResponse>> listDoctors(
+            @RequestParam(required = false) UUID unitId,
+            Pageable pageable) {
+        Page<DoctorResponse> page;
+        if (unitId != null) {
+            page = service.listByUnitId(unitId, pageable);
+        } else {
+            page = service.listByUnitId(null, pageable);
+        }
+        
+        if (page.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(page);
     }
 
     @PostMapping
