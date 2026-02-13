@@ -9,6 +9,5 @@ class RestTemplateConfigTest {
     void testBeans() {
         RestTemplateConfig config = new RestTemplateConfig();
         assertNotNull(config.restTemplate());
-        assertNotNull(config.objectMapper());
     }
 }

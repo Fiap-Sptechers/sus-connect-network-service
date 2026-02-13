@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import org.springframework.data.domain.PageImpl;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
@@ -45,7 +46,9 @@ class DoctorControllerTest {
 
     @Test
     void listDoctors_ShouldReturnOk() throws Exception {
-        when(service.listDoctors()).thenReturn(List.of());
+        when(service.listByUnitId(any(), any())).thenReturn(new PageImpl<>(List.of(
+            new DoctorResponse(UUID.randomUUID(), "Dr. Test", "CRM/SP 123456", Set.of())
+        )));
 
         mockMvc.perform(get("/doctors"))
                 .andExpect(status().isOk())

@@ -12,6 +12,10 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpStatus;
 
 import java.util.List;
 import java.util.Map;
@@ -45,7 +49,8 @@ class GeocodingServiceTest {
     void geocode_ShouldReturnLocation() {
         mockAppConfig();
         String jsonResponse = "[{\"lat\": \"-23.5505\", \"lon\": \"-46.6333\", \"address\": {\"city\": \"São Paulo\", \"state\": \"São Paulo\"}}]";
-        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn(jsonResponse);
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(new ResponseEntity<>(jsonResponse, HttpStatus.OK));
 
         GeocodingService.GeocodedLocation location = service.geocode("Praca da Se");
 
@@ -58,7 +63,8 @@ class GeocodingServiceTest {
     @Test
     void geocode_ShouldReturnEmpty_WhenNoResult() {
         mockAppConfig();
-        when(restTemplate.getForObject(anyString(), eq(String.class))).thenReturn("[]");
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(new ResponseEntity<>("[]", HttpStatus.OK));
 
         GeocodingService.GeocodedLocation location = service.geocode("Unknown");
 

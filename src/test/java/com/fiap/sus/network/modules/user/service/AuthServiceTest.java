@@ -18,6 +18,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.fiap.sus.network.modules.user.repository.RoleRepository;
+import com.fiap.sus.network.modules.user.entity.Role;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -35,6 +38,12 @@ class AuthServiceTest {
     @Mock
     private TokenService tokenService;
 
+    @Mock
+    private RoleRepository roleRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     @InjectMocks
     private AuthService authService;
 
@@ -50,6 +59,7 @@ class AuthServiceTest {
         user.setPassword(encodedPassword);
 
         when(userRepository.findByCpfCnpj(cpf)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches(eq(password), any())).thenReturn(true);
         when(tokenService.generateToken(user)).thenReturn("valid_token");
 
         LoginRequest request = new LoginRequest(cpf, password);
@@ -93,6 +103,7 @@ class AuthServiceTest {
     void createUser_ShouldSaveUser_WhenCpfDoesNotExist() {
         UserRequest request = new UserRequest("Name", "pass", "12345678900", false);
         when(userRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.empty());
+        when(passwordEncoder.encode(any())).thenReturn("encoded");
 
         authService.createUser(request);
 

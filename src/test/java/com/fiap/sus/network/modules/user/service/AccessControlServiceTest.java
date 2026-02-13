@@ -67,7 +67,7 @@ class AccessControlServiceTest {
     @Test
     void checkAccess_ShouldDoNothing_WhenAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("ADMIN")));
+        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("SUPER_ADMIN")));
         
         assertDoesNotThrow(() -> service.checkAccess(UUID.randomUUID()));
     }
@@ -101,7 +101,7 @@ class AccessControlServiceTest {
         
         // Mock Admin check
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("ADMIN")));
+        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("SUPER_ADMIN")));
         
         service.grantUnitAccess(currentUser, targetUser, unit, roleName);
         
@@ -178,7 +178,7 @@ class AccessControlServiceTest {
         
         // Mock Admin
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("ADMIN")));
+        when(auth.getAuthorities()).thenReturn((Collection) List.of(new SimpleGrantedAuthority("SUPER_ADMIN")));
         
         service.addMember(unitId, request, huRepo, uRepo);
         

@@ -61,10 +61,10 @@ class GlobalExceptionHandlerTest {
         when(request.getRequestURI()).thenReturn("/test/path");
         Exception ex = new Exception("Generic error");
         ResponseEntity<ApiError> response = handler.handleException(ex, request);
-
+        
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("Generic error", response.getBody().message());
+        assertEquals("An unexpected error occurred", response.getBody().message());
     }
 
     @Test

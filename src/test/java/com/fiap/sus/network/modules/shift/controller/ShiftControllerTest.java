@@ -45,7 +45,7 @@ class ShiftControllerTest {
 
     @Test
     void update_ShouldReturnOk() throws Exception {
-        ShiftUpdateRequest request = new ShiftUpdateRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL, 10);
+        ShiftUpdateRequest request = new ShiftUpdateRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL.name(), 10);
         doNothing().when(service).updateShift(any());
 
         mockMvc.perform(put("/shifts")
@@ -56,7 +56,7 @@ class ShiftControllerTest {
 
     @Test
     void defineSchedule_ShouldReturnCreated() throws Exception {
-        ShiftScheduleRequest request = new ShiftScheduleRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL, List.of("CRM/SP 123456"));
+        ShiftScheduleRequest request = new ShiftScheduleRequest(UUID.randomUUID(), SpecialtyEnum.CLINICA_GERAL.name(), List.of("CRM/SP 123456"));
         doNothing().when(service).defineSchedule(any());
 
         mockMvc.perform(post("/shifts/schedule")
