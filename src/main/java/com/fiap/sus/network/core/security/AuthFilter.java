@@ -31,15 +31,14 @@ public class AuthFilter extends OncePerRequestFilter {
             String login = tokenService.validateToken(token);
 
             if (!login.isEmpty()) {
-                userRepository.findByCpfCnpj(login).ifPresent(user -> {
+                userRepository.findByCpfCnpj(login).ifPresentOrElse(user -> {
                     CustomUserDetails userDetails = new CustomUserDetails(user);
-                    Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-                    
-                    logger.debug("Authenticated user: " + login + " with authorities: " + authorities);
-                    
+                    Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();                    
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
-                });
+                }, () -> logger.warn("User verified in token but not found in DB: " + login));
+            } else {
+                logger.warn("Token validation returned empty login");
             }
         }
         filterChain.doFilter(request, response);

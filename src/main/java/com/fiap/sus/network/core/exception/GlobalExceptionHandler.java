@@ -21,11 +21,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleException(Exception e, HttpServletRequest request) {
-        log.error("Unhandled exception: ", e);
+        String causeObj = e.getCause() != null ? e.getCause().toString() : "N/A";
+        log.error("Unhandled exception: {} - Cause: {}", e.getClass().getSimpleName(), e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.INTERNAL_SERVER_ERROR.value(),
             HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-            e.getMessage() != null ? e.getMessage() : "An unexpected error occurred",
+            "An unexpected error occurred",
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
@@ -33,6 +34,7 @@ public class GlobalExceptionHandler {
     
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        log.warn("Validation failed: {}", ex.getCause());
         Map<String, String> details = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> 
             details.put(error.getField(), error.getDefaultMessage()));
@@ -49,12 +51,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException e, HttpServletRequest request) {
-        log.warn("Data integrity violation: {}", e.getMessage());
         String message = e.getMostSpecificCause().getMessage();
+        log.warn("Data integrity violation: {}", message);
         ApiError error = new ApiError(
             HttpStatus.CONFLICT.value(),
             "Integrity Violation",
-            message.contains("duplicate key") ? "Resource already exists" : "Database integrity violation",
+            message != null && message.contains("duplicate key") ? "Resource already exists" : "Database integrity violation",
             request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
@@ -62,6 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ApiError> handleMessageNotReadable(HttpMessageNotReadableException e, HttpServletRequest request) {
+        log.warn("Message not readable: {}", e.getMostSpecificCause().getMessage());
         ApiError error = new ApiError(
             HttpStatus.BAD_REQUEST.value(),
             "Malformed JSON",
@@ -71,8 +74,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(error);
     }
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthentication(org.springframework.security.core.AuthenticationException e, HttpServletRequest request) {
+        log.warn("Authentication failed: {}", e.getMessage());
+        ApiError error = new ApiError(
+            HttpStatus.UNAUTHORIZED.value(),
+            "Unauthorized",
+            e.getMessage(),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException e, HttpServletRequest request) {
+        log.warn("Access denied: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.FORBIDDEN.value(),
             "Forbidden",
@@ -82,8 +98,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleResourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
+    @ExceptionHandler({ResourceNotFoundException.class, jakarta.persistence.EntityNotFoundException.class})
+    public ResponseEntity<ApiError> handleResourceNotFound(Exception e, HttpServletRequest request) {
+        log.warn("Resource not found: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.NOT_FOUND.value(),
             "Not Found",
@@ -93,8 +110,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ApiError> handleNoResourceFound(org.springframework.web.servlet.resource.NoResourceFoundException e, HttpServletRequest request) {
+        log.warn("Endpoint not found: {} {}", request.getMethod(), request.getRequestURI());
+        ApiError error = new ApiError(
+            HttpStatus.NOT_FOUND.value(),
+            "Not Found",
+            "Endpoint not found: " + request.getRequestURI(),
+            request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ApiError> handleBusiness(BusinessException e, HttpServletRequest request) {
+        log.warn("Business rule violation: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.BAD_REQUEST.value(),
             "Business Rule Violation",
@@ -106,6 +136,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ApiError> handleResourceAlreadyExists(ResourceAlreadyExistsException e, HttpServletRequest request) {
+        log.warn("Resource already exists: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.CONFLICT.value(),
             "Conflict",
@@ -117,6 +148,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExternalServiceException.class)
     public ResponseEntity<ApiError> handleExternalService(ExternalServiceException e, HttpServletRequest request) {
+        log.error("External service error: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.BAD_GATEWAY.value(),
             "External Service Error",
@@ -128,6 +160,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<ApiError> handleSecurity(SecurityException e, HttpServletRequest request) {
+        log.warn("Security violation: {}", e.getMessage());
         ApiError error = new ApiError(
             HttpStatus.FORBIDDEN.value(),
             "Security Violation",

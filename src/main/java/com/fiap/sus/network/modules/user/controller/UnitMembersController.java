@@ -31,7 +31,7 @@ public class UnitMembersController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<Void> addMember(@PathVariable UUID unitId, @RequestBody MemberRequest request) {
         accessControlService.addMember(unitId, request, unitSaudeRepository, userRepository);
         return ResponseEntity.ok().build();

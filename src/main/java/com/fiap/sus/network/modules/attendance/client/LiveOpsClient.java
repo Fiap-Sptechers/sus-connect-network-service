@@ -17,6 +17,9 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -63,6 +66,28 @@ public class LiveOpsClient {
                 response.status(),
                 String.valueOf(response.entryTime())
         );
+    }
+
+    public List<AttendanceResponse> listAttendances(UUID unitId) {
+        String token = tokenService.generateToken();
+
+        LiveOpsAttendanceResponse[] responses = restClient
+                .get()
+                .uri(liveOpsUrl + "/attendances/unit/" + unitId)
+                .header("Authorization", "Bearer " + token)
+                .retrieve()
+                .body(LiveOpsAttendanceResponse[].class);
+
+        if (responses == null) return Collections.emptyList();
+
+        return Arrays.stream(responses)
+                .map(r -> new AttendanceResponse(
+                        r.id(),
+                        r.patientName(),
+                        r.status(),
+                        String.valueOf(r.entryTime())
+                ))
+                .toList();
     }
 
     public CompleteAttendanceResponse getAttendanceById(String attendanceId) {

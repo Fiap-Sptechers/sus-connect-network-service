@@ -44,7 +44,7 @@ public class AccessControlService {
 
     public boolean isAdmin() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ADMIN"));
+        return auth.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("SUPER_ADMIN"));
     }
     
     @Transactional
@@ -79,6 +79,7 @@ public class AccessControlService {
         userUnidadeRepository.save(assignment);
     }
 
+    @Transactional(readOnly = true)
     public List<UserResponse> listMembers(UUID unitId, UserMapper userMapper) {
         checkAccess(unitId);
         return userUnidadeRepository.findByUnitId(unitId).stream()

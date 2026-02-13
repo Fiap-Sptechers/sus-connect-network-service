@@ -28,4 +28,7 @@ public class Role extends BaseEntity {
     
     @Column(nullable = false)
     private Integer level; // Hierarchy level (e.g. 100 for Admin, 50 for Manager)
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean admin = false;
 }

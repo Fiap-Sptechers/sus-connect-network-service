@@ -4,7 +4,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/sus_connect_network
     username: postgres
-    password: password
+    password: postgres
   jpa:
     hibernate:
       ddl-auto: update
@@ -38,7 +38,7 @@ management:
       probability: 1.0
 
 jwt:
-  secret: "my-secret-key-must-be-very-long-and-secure-enough-for-hs256-algorithm"
+  secret: ${JWT_SECRET}
   expiration: 86400000
   liveops:
     private-key: ${LIVEOPS_PRIVATE_KEY}

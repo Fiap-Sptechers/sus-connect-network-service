@@ -51,7 +51,7 @@ public class ShiftService {
         log.info("Updating shift capacity for unit: {}, specialty: {}", dto.unitId(), dto.specialty());
         validateUnitAndAccess(dto.unitId());
         
-        String specName = dto.specialty().name();
+        String specName = dto.specialty();
         
         Shift shift = repository.findByUnitIdAndSpecialtyName(dto.unitId(), specName)
                 .orElseGet(() -> {
@@ -74,7 +74,7 @@ public class ShiftService {
         log.info("Defining schedule for unit: {}, specialty: {}", dto.unitId(), dto.specialty());
         validateUnitAndAccess(dto.unitId());
         
-        String specName = dto.specialty().name();
+        String specName = dto.specialty();
         
         Shift shift = repository.findByUnitIdAndSpecialtyName(dto.unitId(), specName)
                 .orElseGet(() -> {

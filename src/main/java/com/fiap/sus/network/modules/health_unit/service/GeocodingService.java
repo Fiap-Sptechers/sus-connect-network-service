@@ -18,6 +18,10 @@ import java.util.List;
 import java.util.Map;
 import com.fiap.sus.network.core.config.AppConfigProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 
 @Service
 @Slf4j
@@ -32,8 +36,22 @@ public class GeocodingService {
         log.info("Fetching coordinates and location info for address: {}", address);
         try {
             String baseUrl = appConfig.getGeocoding().getUrl();
+            
+            // Add custom headers to avoid blocking
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(HttpHeaders.USER_AGENT, "SusConnectNetwork/1.0");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+            
             String url = baseUrl + "?q=" + address.replace(" ", "+") + "&format=json&limit=1&addressdetails=1";
-            String response = restTemplate.getForObject(url, String.class);
+            
+            ResponseEntity<String> responseEntity = restTemplate.exchange(
+                url, 
+                HttpMethod.GET, 
+                entity, 
+                String.class
+            );
+            
+            String response = responseEntity.getBody();
 
             if (response != null && !response.equals("[]")) {
                 JsonNode root = objectMapper.readTree(response);

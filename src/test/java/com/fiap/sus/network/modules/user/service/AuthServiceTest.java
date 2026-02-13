@@ -91,7 +91,7 @@ class AuthServiceTest {
 
     @Test
     void createUser_ShouldSaveUser_WhenCpfDoesNotExist() {
-        UserRequest request = new UserRequest("Name", "pass", "12345678900");
+        UserRequest request = new UserRequest("Name", "pass", "12345678900", false);
         when(userRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.empty());
 
         authService.createUser(request);
@@ -101,7 +101,7 @@ class AuthServiceTest {
 
     @Test
     void createUser_ShouldThrowException_WhenCpfExists() {
-        UserRequest request = new UserRequest("Name", "pass", "12345678900");
+        UserRequest request = new UserRequest("Name", "pass", "12345678900", false);
         when(userRepository.findByCpfCnpj(request.cpfCnpj())).thenReturn(Optional.of(new User()));
 
         assertThrows(ResourceAlreadyExistsException.class, () -> authService.createUser(request));

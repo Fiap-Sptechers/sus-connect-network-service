@@ -9,6 +9,8 @@ import lombok.AllArgsConstructor;
 import org.hibernate.annotations.Where;
 import com.fiap.sus.network.shared.entity.BaseEntity;
 import com.fiap.sus.network.modules.health_unit.entity.HealthUnit;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import java.util.UUID;
 
 @Entity
@@ -30,8 +32,9 @@ public class UserUnit extends BaseEntity {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "unit_id", nullable = false)
+    @NotFound(action = NotFoundAction.IGNORE)
     private HealthUnit unit;
 
     @ManyToOne

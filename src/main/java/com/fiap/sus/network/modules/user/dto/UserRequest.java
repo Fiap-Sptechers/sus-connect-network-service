@@ -10,5 +10,6 @@ public record UserRequest(
     @NotBlank
     String password,
     @NotBlank
-    String cpfCnpj
+    String cpfCnpj,
+    boolean admin
 ) {}

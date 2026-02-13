@@ -47,12 +47,21 @@ public class M2MTokenService {
     }
 
     private PrivateKey loadPrivateKey(String keyContent) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        String key = keyContent
+        String cleanKey = keyContent
                 .replace("-----BEGIN PRIVATE KEY-----", "")
                 .replace("-----END PRIVATE KEY-----", "")
-                .replaceAll("\\s", "");
+                .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                .replace("-----END RSA PRIVATE KEY-----", "");
 
-        byte[] keyBytes = Base64.getDecoder().decode(key);
+        String sanitizedKey = cleanKey
+                .replace("\\n", "")
+                .replace("\\r", "")
+                .replace("\"", "")
+                .replace("'", "")
+                .replaceAll("\\s+", "")
+                .replace("\\", "");
+
+        byte[] keyBytes = Base64.getDecoder().decode(sanitizedKey);
         PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
         return KeyFactory.getInstance("RSA").generatePrivate(spec);
     }

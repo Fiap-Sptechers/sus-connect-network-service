@@ -38,7 +38,7 @@ public class DoctorController {
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<DoctorResponse> createDoctor(@RequestBody @Valid DoctorRequest request) {
         return ResponseEntity.status(201).body(service.createDoctor(request));
     }
@@ -49,7 +49,7 @@ public class DoctorController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+    @PreAuthorize("hasAnyAuthority('ADMIN', 'MANAGER', 'SUPER_ADMIN')")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         service.delete(id);
         return ResponseEntity.noContent().build();
